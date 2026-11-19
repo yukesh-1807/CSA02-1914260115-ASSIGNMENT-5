@@ -1,0 +1,247 @@
+# TASK A1 – DECOMPOSE THE PROGRAM INTO FUNCTIONS
+
+## A1.1 – Identify the Functions (2 Marks)
+
+The District Blood Bank Network program is divided into smaller functions. Each function performs one specific operation. This makes the program modular, easier to test and maintain.
+
+### Functions and their responsibilities
+
+| Function | Responsibility |
+|---|---|
+| `registerDonor()` | Registers a new donor. |
+| `checkEligibility()` | Checks whether a donor is eligible to donate. |
+| `findDonors()` | Finds donors belonging to a particular blood group. |
+| `updateStock()` | Updates available blood units after donation or issue. |
+| `findYoungestEligible()` | Finds the number of eligible donors and youngest donor. |
+| `saveDonors()` | Saves donor records into a file. |
+| `loadDonors()` | Loads donor records from a file. |
+| `saveStock()` | Saves stock records into a file. |
+| `loadStock()` | Loads stock records from a file. |
+| `displayReport()` | Displays donor and stock information. |
+
+### Structure Chart
+
+```text
+                 MAIN PROGRAM
+                       |
+       +---------------+----------------+
+       |               |                |
+  Load Records    Process Operations   Save Records
+       |               |                |
+   +---+---+       +---+---+        +---+---+
+   |       |       |       |        |       |
+Load    Load   Register Find    Save    Save
+Donors  Stock  Donor   Donors  Donors  Stock
+                   |       |
+               Check    Display
+             Eligibility Report
+                   |
+              Update Stock
+```
+
+The main program controls the overall execution. It calls the required functions to load records, process donor operations, update stock and save the results.
+
+## A1.2 – Design the Interfaces (3 Marks)
+
+### Function Prototypes
+
+```c
+typedef struct {
+    int id;
+    char name[50];
+    char bloodGroup[4];
+    int age;
+    char phone[15];
+    char lastDonation[11];
+} Donor;
+
+typedef struct {
+    char bloodGroup[4];
+    int units;
+} Stock;
+
+typedef struct {
+    int count;
+    int youngestDonorID;
+} EligibilityResult;
+
+int registerDonor(Donor *donor);
+
+int checkEligibility(const Donor *donor);
+
+int findDonors(const Donor donors[], int count,
+               const char *bloodGroup);
+
+int updateStock(Stock stock[], int count,
+                const char *bloodGroup, int units);
+
+EligibilityResult findYoungestEligible(
+    const Donor donors[], int count,
+    const char *bloodGroup);
+
+int saveDonors(const Donor donors[], int count,
+               const char *filename);
+
+int loadDonors(Donor donors[], int capacity,
+               const char *filename);
+
+int saveStock(const Stock stock[], int count,
+              const char *filename);
+
+int loadStock(Stock stock[], int capacity,
+              const char *filename);
+
+void displayReport(const Donor donors[], int count);
+```
+
+### Parameter Passing and Justification
+
+| Parameter | Passing method | Justification |
+|---|---|---|
+| `Donor *donor` | Pointer | Allows the function to modify the donor record. |
+| `const Donor *donor` | Pointer to const | Reads donor details without modifying them. |
+| `donors[]` | Array/pointer | Allows access to multiple donor records. |
+| `count` | Value | Only a copy of the number is needed. |
+| `const char *bloodGroup` | Pointer to const | Reads the blood group without changing the string. |
+| `stock[]` | Array/pointer | Allows stock records to be updated. |
+| `units` | Value | Passes the number of units to add or subtract. |
+| `filename` | Pointer to const | Reads the filename without modifying it. |
+
+**Why use const pointers?**
+
+The `const` keyword prevents accidental modification of data that a function only needs to read. It improves safety and makes the function's purpose clear.
+
+## A1.3 – Return More Than One Value (2 Marks)
+
+The function must return:
+
+1. Number of eligible donors.
+2. ID of the youngest eligible donor.
+
+### Alternative 1: Using Pointer Parameters
+
+**Function prototype:**
+
+```c
+void findEligible(
+    const Donor donors[],
+    int count,
+    const char *bloodGroup,
+    int *eligibleCount,
+    int *youngestID
+);
+```
+
+**Pseudocode:**
+
+```text
+ALGORITHM FindEligible
+
+INPUT donors, count, bloodGroup
+SET eligibleCount = 0
+SET youngestAge = VERY_LARGE_VALUE
+SET youngestID = -1
+
+FOR each donor in donors
+    IF donor blood group matches bloodGroup
+       AND donor is eligible THEN
+
+        INCREMENT eligibleCount
+
+        IF donor age < youngestAge THEN
+            SET youngestAge = donor age
+            SET youngestID = donor ID
+        END IF
+    END IF
+END FOR
+
+RETURN eligibleCount and youngestID through pointer parameters
+
+END ALGORITHM
+```
+
+The function stores both results through pointer parameters.
+
+### Alternative 2: Returning a Structure
+
+**Structure and function prototype:**
+
+```c
+typedef struct {
+    int eligibleCount;
+    int youngestID;
+} EligibilityResult;
+
+EligibilityResult findEligible(
+    const Donor donors[],
+    int count,
+    const char *bloodGroup
+);
+```
+
+**Pseudocode:**
+
+```text
+ALGORITHM FindEligibleUsingStructure
+
+DECLARE result as EligibilityResult
+SET result.eligibleCount = 0
+SET result.youngestID = -1
+SET youngestAge = VERY_LARGE_VALUE
+
+FOR each donor in donors
+    IF donor blood group matches bloodGroup
+       AND donor is eligible THEN
+
+        INCREMENT result.eligibleCount
+
+        IF donor age < youngestAge THEN
+            SET youngestAge = donor age
+            SET result.youngestID = donor ID
+        END IF
+    END IF
+END FOR
+
+RETURN result
+
+END ALGORITHM
+```
+
+### Comparison
+
+| Feature | Pointer parameters | Structure return |
+|---|---|---|
+| Number of returned values | Through pointers | Through structure members |
+| Function return type | `void` | `EligibilityResult` |
+| Readability | Requires understanding pointers | Easy to understand |
+| Safety | Caller must provide valid pointers | Returns one grouped result |
+| Reusability | Good | Good |
+
+**Conclusion:** Returning a structure is preferable because both results are grouped into one meaningful data type. Pointer parameters are also useful when the caller needs the function to update existing variables.
+
+## Alternative Concept and Complexity Analysis – Global Variables
+
+If all functions shared data through global variables, the donor list and stock records could be declared outside all functions.
+
+Example:
+
+```c
+Donor donors[1000];
+Stock stocks[8];
+int donorCount;
+```
+
+All functions could access these variables directly without receiving them as parameters.
+
+### Analysis
+
+- **Running time:** No major change. The same operations are performed.
+- **Memory:** Global data still occupies memory. It does not remove the memory needed for donor and stock records.
+- **Coupling:** Functions become tightly connected because they depend on shared variables.
+- **Testing:** Testing individual functions becomes more difficult because they depend on global program state.
+- **Reusability:** Functions become less reusable in other programs.
+- **Maintenance:** Changes to global data may affect several functions.
+
+### Conclusion
+
+Passing data through parameters and pointers is better than using global variables. It reduces coupling, improves testing and makes the program easier to maintain and reuse.
