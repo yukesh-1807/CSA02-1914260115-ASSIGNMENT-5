@@ -1,0 +1,157 @@
+# TASK A4 – DESIGN DYNAMIC MEMORY USE
+
+## A4.1 – Growable Donor List (2 Marks)
+
+The number of donors is not known in advance. Therefore, dynamic memory allocation is used.
+
+A growable donor list starts with a small capacity. When the list becomes full, its capacity is doubled using `realloc()`.
+
+### Structure Design
+
+```c
+typedef struct {
+    int id;
+    char name[50];
+    char bloodGroup[4];
+    int age;
+    char phone[15];
+    char lastDonation[11];
+} Donor;
+
+typedef struct {
+    Donor *data;
+    int size;
+    int capacity;
+} DonorList;
+```
+
+### Pseudocode for Adding a Donor
+
+```text
+ALGORITHM AddDonor(list, donor)
+
+IF list.size = list.capacity THEN
+
+    IF list.capacity = 0 THEN
+        SET newCapacity = 2
+    ELSE
+        SET newCapacity = list.capacity * 2
+    END IF
+
+    SET p = REALLOCATE list.data
+                TO newCapacity donor records
+
+    IF p = NULL THEN
+        DISPLAY "Memory allocation failed"
+        RETURN FAILURE
+    END IF
+
+    SET list.data = p
+    SET list.capacity = newCapacity
+
+END IF
+
+SET list.data[list.size] = donor
+INCREMENT list.size
+
+RETURN SUCCESS
+
+END ALGORITHM
+```
+
+### Explanation
+
+1. Check whether the donor list is full.
+2. If capacity is zero, allocate space for two donors.
+3. Otherwise, double the existing capacity.
+4. Use `realloc()` to increase the memory.
+5. Store its result in a temporary pointer.
+6. If allocation fails, retain the old pointer and report failure.
+7. If allocation succeeds, update the pointer and capacity.
+8. Add the new donor and increase the size.
+
+## A4.2 – Memory Errors (2 Marks)
+
+### 1. Memory Leak
+
+A memory leak occurs when dynamically allocated memory is not released after use.
+
+**Example in the blood bank:**
+
+Memory is allocated for donor records using `malloc()`, but the program exits without calling `free()`.
+
+**Prevention:**
+
+Call `free(list.data)` when the donor list is no longer required.
+
+### 2. Dangling Pointer
+
+A dangling pointer is a pointer that refers to memory that is no longer valid.
+
+**Example in the blood bank:**
+
+A pointer to a donor record is retained after the donor array is freed or successfully reallocated.
+
+**Prevention:**
+
+Update pointers after successful reallocation and set pointers to `NULL` after freeing memory.
+
+### 3. Double Free
+
+Double free occurs when the same allocated memory is released more than once.
+
+**Example in the blood bank:**
+
+The program calls `free(list.data)` twice.
+
+**Prevention:**
+
+Free the allocated memory only once and set the pointer to `NULL`.
+
+### Safe Memory Release
+
+```c
+free(list.data);
+list.data = NULL;
+list.size = 0;
+list.capacity = 0;
+```
+
+## Alternative Concept and Complexity Analysis
+
+Instead of doubling capacity, the donor list can grow by a fixed 10 records each time.
+
+### Fixed-Increment Design
+
+```text
+IF size = capacity THEN
+    newCapacity = capacity + 10
+    realloc memory for newCapacity records
+END IF
+```
+
+### Comparison
+
+| Feature | Doubling strategy | Fixed +10 strategy |
+|---|---|---|
+| Capacity growth | Multiplied by 2 | Increased by 10 |
+| Total copying | O(n) overall, amortized | O(n²) overall |
+| Unused space | Can approach half the capacity | At most 9 unused slots |
+| Number of reallocations | Fewer | More |
+| Performance | Better for large lists | May be slower for large lists |
+
+### Complexity Explanation
+
+**Doubling strategy:**
+
+The capacity grows as 2, 4, 8, 16, 32 and so on. The total number of elements that may need copying across all growth operations is O(n).
+
+**Fixed +10 strategy:**
+
+The capacity grows as 10, 20, 30, 40 and so on. Repeated copying can result in O(n²) total work.
+
+The exact amount of copying depends on whether `realloc()` can extend the existing allocation in place.
+
+### Conclusion
+
+Doubling the capacity is recommended because it reduces the number of memory reallocations and gives O(n) amortized total insertion work. Fixed increments use less unused space but may require more reallocations.
