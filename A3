@@ -1,0 +1,215 @@
+# TASK A3 – DESIGN WITH POINTERS
+
+## A3.1 – Pointer Operations (2 Marks)
+
+Given:
+
+```c
+int stock[8];
+int *p = stock;
+```
+
+The array contains 8 integer elements. The pointer `p` stores the address of the first element of the array.
+
+### Explanation of Pointer Expressions
+
+| Expression | Meaning |
+|---|---|
+| `p + 3` | Address of the fourth array element. |
+| `*(p + 3)` | Value stored in the fourth array element. |
+| `p[3]` | Another way to access the fourth array element. |
+| `*p++` | Accesses the current value pointed to by p, then increments the pointer. |
+
+**Important:** `*p++` means `*(p++)`. It does not increment the value stored in the array.
+
+### Memory Diagram
+
+Assume the starting address is 1000 and each integer occupies 4 bytes.
+
+```text
+       Array: stock[8]
+
+ Address       Element       Pointer
+ +------+      +---------+
+ | 1000 | ---> | stock[0]| <--- p
+ +------+      +---------+
+ | 1004 |      | stock[1]|
+ +------+      +---------+
+ | 1008 |      | stock[2]|
+ +------+      +---------+
+ | 1012 |      | stock[3]| <--- p + 3
+ +------+      +---------+
+ | 1016 |      | stock[4]|
+ +------+      +---------+
+ | 1020 |      | stock[5]|
+ +------+      +---------+
+ | 1024 |      | stock[6]|
+ +------+      +---------+
+ | 1028 |      | stock[7]|
+ +------+      +---------+
+```
+
+Therefore:
+
+- `p + 3` gives the address of `stock[3]`.
+- `*(p + 3)` gives the value of `stock[3]`.
+- `p[3]` also gives the value of `stock[3]`.
+- `*p++` reads the current element and moves the pointer to the next element.
+
+## A3.2 – Pointers and Functions (2 Marks)
+
+A function can find the blood group with the lowest stock and return a pointer to that stock element.
+
+### C Function
+
+```c
+#include <stdio.h>
+
+typedef struct {
+    char bloodGroup[4];
+    int units;
+} Stock;
+
+Stock *findLowestStock(Stock stock[], int count)
+{
+    int i;
+    int minIndex = 0;
+
+    if (count <= 0)
+        return NULL;
+
+    for (i = 1; i < count; i++) {
+        if (stock[i].units < stock[minIndex].units) {
+            minIndex = i;
+        }
+    }
+
+    return &stock[minIndex];
+}
+```
+
+### Example of Calling the Function
+
+```c
+Stock *lowest = findLowestStock(stock, 8);
+
+if (lowest != NULL) {
+    printf("Lowest stock: %s\n", lowest->bloodGroup);
+    lowest->units = lowest->units + 5;
+}
+```
+
+The function returns the address of the stock element with the lowest number of units. The caller can update that element directly.
+
+### Why Returning a Pointer to a Local Variable Is Wrong
+
+A local variable exists only while its function is executing. After the function returns, the local variable's lifetime ends.
+
+Returning its address creates a dangling pointer. Accessing it later causes undefined behaviour.
+
+**Correct design:** Return a pointer to an element of the array passed by the caller, provided that the array remains valid.
+
+## A3.3 – Command-Line Interface (1 Mark)
+
+The program can accept commands using `argc` and `argv`.
+
+### Example Commands
+
+```text
+bloodbank find O+
+bloodbank issue A- 2
+bloodbank register
+```
+
+### C Command-Line Design
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(int argc, char *argv[])
+{
+    if (argc == 3 && strcmp(argv[1], "find") == 0) {
+        printf("Finding donors of blood group %s\n", argv[2]);
+    }
+    else if (argc == 4 && strcmp(argv[1], "issue") == 0) {
+        char *end;
+        long units = strtol(argv[3], &end, 10);
+
+        if (*end != '\0' || units <= 0) {
+            printf("Invalid number of units\n");
+            return 1;
+        }
+
+        printf("Issuing %ld units of %s\n", units, argv[2]);
+    }
+    else {
+        printf("Invalid command or arguments\n");
+        printf("Usage:\n");
+        printf("bloodbank find O+\n");
+        printf("bloodbank issue A- 2\n");
+        return 1;
+    }
+
+    return 0;
+}
+```
+
+The complete program should also validate blood groups against the supported groups before processing a command.
+
+### Handling Invalid Arguments
+
+- If no arguments are given, display usage instructions.
+- If too many arguments are given, display an error.
+- If the blood group is invalid, reject the command.
+- If the number of units is zero, negative or not numeric, reject it.
+
+## Alternative Concept and Complexity Analysis
+
+Instead of returning a pointer, the function can return the index of the lowest-stock element.
+
+### Alternative Function
+
+```c
+int findLowestIndex(Stock stock[], int count)
+{
+    int i;
+    int minIndex = 0;
+
+    if (count <= 0)
+        return -1;
+
+    for (i = 1; i < count; i++) {
+        if (stock[i].units < stock[minIndex].units) {
+            minIndex = i;
+        }
+    }
+
+    return minIndex;
+}
+```
+
+### Calling Code
+
+```c
+int index = findLowestIndex(stock, 8);
+
+if (index != -1) {
+    stock[index].units += 5;
+}
+```
+
+### Comparison
+
+| Feature | Pointer version | Index version |
+|---|---|---|
+| Return value | Address of element | Array index |
+| Time complexity | O(n) | O(n) |
+| Extra space | O(1) | O(1) |
+| Updating | Direct through pointer | Access using index |
+| Reallocation safety | Pointer may become invalid | Index can be used again with the new array |
+
+### Conclusion
+
+Both approaches require O(n) time and O(1) extra space. Returning an index is generally safer when a dynamic array may be reallocated because an old pointer can become invalid after `realloc()`. The index can be used with the new array address.
