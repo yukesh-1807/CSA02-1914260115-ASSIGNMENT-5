@@ -1,0 +1,232 @@
+# TASK A2 – DESIGN WITH RECURSION
+
+## A2.1 – Recursive Design (2 Marks)
+
+Recursion is a programming technique in which a function calls itself until a base condition is reached.
+
+### 1. Digital Root
+
+The digital root is calculated by repeatedly adding the digits of a number until only one digit remains.
+
+**Example:**
+
+Number = 9875
+
+9 + 8 + 7 + 5 = 29
+
+2 + 9 = 11
+
+1 + 1 = 2
+
+Digital Root = 2
+
+**Pseudocode:**
+
+```text
+ALGORITHM DigitalRoot(n)
+
+IF n < 10 THEN
+    RETURN n
+END IF
+
+SET sum = 0
+
+WHILE n > 0
+    SET digit = n MOD 10
+    SET sum = sum + digit
+    SET n = n DIV 10
+END WHILE
+
+RETURN DigitalRoot(sum)
+
+END ALGORITHM
+```
+
+**Base case:** If n is less than 10, return n.
+
+**Recursive case:** Add all digits and call DigitalRoot again with the sum.
+
+### 2. Calculate base^n Using Recursion
+
+The power function calculates a number raised to an exponent.
+
+Formula:
+
+baseⁿ = (baseⁿ/²)²
+
+**Pseudocode:**
+
+```text
+ALGORITHM PowerFast(base, n)
+
+IF n = 0 THEN
+    RETURN 1
+END IF
+
+SET half = PowerFast(base, n DIV 2)
+
+IF n MOD 2 = 0 THEN
+    RETURN half * half
+ELSE
+    RETURN base * half * half
+END IF
+
+END ALGORITHM
+```
+
+**Base case:** If n = 0, return 1.
+
+**Recursive case:** Calculate the power of half the exponent and square the result. If the exponent is odd, multiply once more by the base.
+
+## A2.2 – Trace the Calls (2 Marks)
+
+### 1. Digital Root Trace
+
+Take input: 9875
+
+| Function call | Calculation | Result |
+|---|---|---|
+| DigitalRoot(9875) | 9+8+7+5 | 29 |
+| DigitalRoot(29) | 2+9 | 11 |
+| DigitalRoot(11) | 1+1 | 2 |
+| DigitalRoot(2) | Base case | 2 |
+
+**Call stack at deepest point:**
+
+```text
++----------------------+
+| DigitalRoot(2)       |  Base case
++----------------------+
+| DigitalRoot(11)      |
++----------------------+
+| DigitalRoot(29)      |
++----------------------+
+| DigitalRoot(9875)    |
++----------------------+
+```
+
+Final answer = 2.
+
+### 2. Power Function Trace
+
+Take base = 2 and exponent = 5.
+
+Calculation:
+
+PowerFast(2,5)
+
+- PowerFast(2,5) calls PowerFast(2,2).
+- PowerFast(2,2) calls PowerFast(2,1).
+- PowerFast(2,1) calls PowerFast(2,0).
+- PowerFast(2,0) returns 1.
+
+Returning values:
+
+| Function call | Calculation | Return value |
+|---|---|---|
+| PowerFast(2,0) | Base case | 1 |
+| PowerFast(2,1) | 2 × 1 × 1 | 2 |
+| PowerFast(2,2) | 2 × 2 | 4 |
+| PowerFast(2,5) | 2 × 4 × 4 | 32 |
+
+Final answer = 32.
+
+**Call stack at deepest point:**
+
+```text
++----------------------+
+| PowerFast(2,0)       |  Base case
++----------------------+
+| PowerFast(2,1)       |
++----------------------+
+| PowerFast(2,2)       |
++----------------------+
+| PowerFast(2,5)       |
++----------------------+
+```
+
+### Recurrence for Number of Calls
+
+**Linear recursive power:**
+
+```text
+T(n) = T(n-1) + 1
+T(0) = 1
+```
+
+Number of calls = n + 1.
+
+Time complexity = O(n).
+
+**Halving recursive power:**
+
+```text
+T(n) = T(n/2) + 1
+T(0) = 1
+```
+
+Number of calls = floor(log₂ n) + 1.
+
+Time complexity = O(log n).
+
+## A2.3 – Recursion Risks (1 Mark)
+
+### What Happens if the Base Case is Missing?
+
+- The function keeps calling itself.
+- The calls continue without stopping.
+- More memory is used by the call stack.
+- Eventually, the program may crash due to stack overflow.
+
+### When Should Recursion Be Replaced by a Loop?
+
+Recursion should be replaced by a loop when:
+
+1. The problem can be solved easily using iteration.
+2. The recursion depth may become very large.
+3. Memory usage needs to be reduced.
+4. A simpler and more efficient solution is required.
+
+## Alternative Concept and Complexity Analysis
+
+### Digital Root Using a Loop
+
+Instead of recursion, a loop can repeatedly calculate the sum of digits.
+
+**Alternative formula:**
+
+For a positive integer n:
+
+```text
+DigitalRoot = 1 + (n - 1) MOD 9
+```
+
+For n = 0, the result is 0.
+
+Example:
+
+n = 9875
+
+DigitalRoot = 1 + (9875 - 1) MOD 9
+
+DigitalRoot = 2
+
+### Comparison
+
+| Method | Time complexity | Extra stack space |
+|---|---|---|
+| Recursive digital root | O(d), where d is the number of digits | O(d) in the worst case |
+| Loop-based digital root | O(d) | O(1) |
+| Digital root formula | O(1) | O(1) |
+
+### Power Function Comparison
+
+| Method | Time complexity | Stack space |
+|---|---|---|
+| Linear recursion | O(n) | O(n) |
+| Halving recursion | O(log n) | O(log n) |
+| Iterative square-and-multiply | O(log n) | O(1) |
+
+### Conclusion
+
+The recursive halving method is more efficient than linear recursion because it reduces the exponent by half in every call. The iterative method uses less additional memory because it does not require recursive function calls. The digital-root formula provides a constant-time solution for non-negative integers, with a separate condition for zero.
