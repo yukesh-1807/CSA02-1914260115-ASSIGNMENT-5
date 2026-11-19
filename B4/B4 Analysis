@@ -1,0 +1,25 @@
+
+# B4 – Donor Eligibility Report
+
+## 1. Objective
+To generate a donor eligibility report using dynamically allocated memory.
+
+## 2. Dynamic Memory Allocation
+The program uses realloc() to increase the donor list capacity when required.
+
+## 3. Memory Management
+- malloc/realloc allocate memory.
+- A temporary pointer is used with realloc().
+- free() releases allocated memory.
+- The program avoids memory leaks.
+
+## 4. Eligibility Report
+The program displays donor ID, name, age, blood group and eligibility status.
+
+## 5. Performance
+The capacity doubles whenever the array becomes full.
+
+This reduces the frequency of memory reallocations compared with increasing capacity by one each time.
+
+## 6. Conclusion
+Dynamic memory allocation allows the donor list to grow as new donor records are added. Proper memory management improves reliability.
