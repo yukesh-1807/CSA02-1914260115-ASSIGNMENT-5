@@ -1,0 +1,183 @@
+# TASK A5 – DESIGN THE FILE STORAGE
+
+## A5.1 – Text or Binary? (2 Marks)
+
+The blood bank must store donor and stock information permanently so that records remain available after the computer is switched off.
+
+Two file formats are used: text and binary.
+
+### 1. Donor File – Text Format
+
+Each donor record is stored on a separate line using `fprintf()`.
+
+**Example:**
+
+```text
+7001,Arun,O+,25,9876543210,2026-01-15
+7002,Kumar,A-,30,9876543211,2026-02-10
+7003,Ravi,B+,28,9876543212,2026-03-05
+```
+
+**C statement:**
+
+```c
+fprintf(fp, "%d,%s,%s,%d,%s,%s\n",
+        donor.id,
+        donor.name,
+        donor.bloodGroup,
+        donor.age,
+        donor.phone,
+        donor.lastDonation);
+```
+
+**Advantages:**
+
+- Easy to read and understand.
+- Easy to edit manually.
+- Portable across different systems.
+- Useful for checking donor records.
+
+### 2. Stock File – Binary Format
+
+Each stock record is stored as a fixed-size structure using `fwrite()`.
+
+**Structure:**
+
+```c
+typedef struct {
+    char bloodGroup[4];
+    int units;
+} Stock;
+```
+
+**C statement:**
+
+```c
+fwrite(&stock, sizeof(Stock), 1, fp);
+```
+
+**Advantages:**
+
+- Records can be accessed directly.
+- Efficient for fixed-size records.
+- Supports updating one record using `fseek()`.
+- Avoids converting every value into text during storage.
+
+**Note:** Binary structures may contain compiler-dependent padding and integer representations. For long-term portability, a defined binary format with explicit field sizes and byte order is preferable.
+
+### Comparison
+
+| Feature | Text file | Binary file |
+|---|---|---|
+| Readability | Human-readable | Not directly human-readable |
+| Portability | Generally high | May depend on system representation |
+| File size | Usually larger | Usually smaller |
+| Direct record update | Difficult | Easy for fixed-size records |
+| Functions | `fprintf()`, `fscanf()` | `fwrite()`, `fread()` |
+
+## A5.2 – Update in Place (2 Marks)
+
+The stock file contains fixed-size records. Therefore, one record can be updated without rewriting the entire file.
+
+### Pseudocode
+
+```text
+ALGORITHM UpdateStockFile(filename, index, newUnits)
+
+OPEN filename in binary read/write mode
+
+IF file cannot be opened THEN
+    DISPLAY error
+    RETURN FAILURE
+END IF
+
+SET position = index * SIZE OF Stock
+
+IF FSEEK file to position fails THEN
+    CLOSE file
+    RETURN FAILURE
+END IF
+
+READ one Stock record using FREAD
+
+IF reading fails THEN
+    CLOSE file
+    RETURN FAILURE
+END IF
+
+SET record.units = newUnits
+
+IF FSEEK file back by SIZE OF Stock fails THEN
+    CLOSE file
+    RETURN FAILURE
+END IF
+
+WRITE the updated record using FWRITE
+
+IF writing fails THEN
+    CLOSE file
+    RETURN FAILURE
+END IF
+
+CLOSE file
+RETURN SUCCESS
+
+END ALGORITHM
+```
+
+### Explanation of Functions
+
+| Function | Purpose |
+|---|---|
+| `fseek()` | Moves the file position to a particular record. |
+| `fread()` | Reads the selected stock record. |
+| `fwrite()` | Writes the updated stock record. |
+
+### Why Is This Difficult for a Text File?
+
+Text records may have different lengths because names and other fields contain different numbers of characters.
+
+Changing one value may change the length of a line. This shifts the positions of later records.
+
+Therefore, updating a text file generally requires reading and rewriting the file or using a separate index.
+
+## Alternative Concept and Complexity Analysis
+
+Instead of updating the binary stock file in place, the program could store stock records in a text file and rewrite the complete file after every update.
+
+### Text File Update Design
+
+```text
+OPEN original text file for reading
+OPEN temporary text file for writing
+
+FOR each record in original file
+    READ record
+
+    IF record matches required blood group THEN
+        UPDATE its units
+    END IF
+
+    WRITE record into temporary file
+END FOR
+
+CLOSE both files
+
+REPLACE original file with temporary file
+
+END ALGORITHM
+```
+
+### Complexity Comparison
+
+| Feature | Binary in-place update | Text file rewrite |
+|---|---|---|
+| Time per update | O(1) for fixed-size indexed record access | O(n) |
+| Records processed | One record | All records |
+| File operations | Seek, read and write | Read and rewrite |
+| Extra storage | Small | Temporary file required |
+| File size | Usually smaller | Usually larger |
+
+### Conclusion
+
+A text file is suitable for donor records because it is readable and easy to maintain. A binary file is suitable for fixed-size stock records because it supports direct access and efficient updates. Therefore, using both formats is a practical design for the blood bank system.
