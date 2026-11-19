@@ -5,7 +5,7 @@
 **Course Name:** C Programming  
 **Course Outcome:** CO5  
 **Assignment:** 5  
-**Student Name:** [Enter Your Name]  
+**Student Name:** Yukesh Babu V 
 **Register Number:** 1914260115  
 **Compiler:** OnlineGDB – C Compiler  
 **Programming Language:** C
